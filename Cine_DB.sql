@@ -14,7 +14,7 @@ CREATE TABLE Cartelera (
     duracion INT NOT NULL,
     genero ENUM('Comedia','Drama','Accion','Terror','Ciencia Ficcion','Romance') NOT NULL
 );
-
+-- Ejemplos
 INSERT INTO Cartelera (titulo, director, anio, duracion, genero)
 VALUES 
 ('Inception', 'Christopher Nolan', 2010, 148, 'Ciencia Ficcion'),
