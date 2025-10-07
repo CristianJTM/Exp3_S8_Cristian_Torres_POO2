@@ -8,9 +8,10 @@ package cinemagenta.util;
  *
  * @author Cristian
  */
-import javax.swing.JOptionPane;
+import javax.swing.*;
+
 public class Validador {
-    public static boolean validarNoVacio(String valor, String nombreCampo) {
+     public static boolean validarNoVacio(String valor, String nombreCampo) {
         if (valor == null || valor.trim().isEmpty()) {
             JOptionPane.showMessageDialog(null, "El campo " + nombreCampo + " es obligatorio.", "Error", JOptionPane.ERROR_MESSAGE);
             return false;

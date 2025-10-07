@@ -13,6 +13,7 @@ import cinemagenta.view.MainFrame;
 import java.sql.Connection;
 import java.sql.SQLException;
 import javax.swing.JOptionPane;
+import javax.swing.SwingUtilities;
 
 public class CineMagenta {
 
@@ -38,8 +39,9 @@ public class CineMagenta {
             );
             System.exit(1);
         }
-        javax.swing.SwingUtilities.invokeLater(() -> {
-            new MainFrame().setVisible(true);
+        SwingUtilities.invokeLater(() -> {
+            MainFrame ventana = new MainFrame();
+            ventana.setVisible(true);
         });
     }
     

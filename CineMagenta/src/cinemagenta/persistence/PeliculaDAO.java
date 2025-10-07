@@ -17,24 +17,29 @@ public class PeliculaDAO {
 
     public void agregar(Pelicula pelicula) throws SQLException {
         String sql = "INSERT INTO Cartelera (titulo, director, anio, duracion, genero) VALUES (?, ?, ?, ?, ?)";
-        try (Connection conn = ConexionDB.getConnection();
-             PreparedStatement stmt = conn.prepareStatement(sql)) {
+        try (Connection conn = ConexionDB.getConnection(); PreparedStatement stmt = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
 
             stmt.setString(1, pelicula.getTitulo());
             stmt.setString(2, pelicula.getDirector());
             stmt.setInt(3, pelicula.getAnio());
             stmt.setInt(4, pelicula.getDuracion());
             stmt.setString(5, pelicula.getGenero());
-            stmt.executeUpdate();
+
+            int filas = stmt.executeUpdate();
+            if (filas > 0) {
+                try (ResultSet rs = stmt.getGeneratedKeys()) {
+                    if (rs.next()) {
+                        pelicula.setId(rs.getInt(1));
+                    }
+                }
+            }
         }
     }
 
     public List<Pelicula> listar() throws SQLException {
         List<Pelicula> lista = new ArrayList<>();
         String sql = "SELECT * FROM Cartelera";
-        try (Connection conn = ConexionDB.getConnection();
-             Statement stmt = conn.createStatement();
-             ResultSet rs = stmt.executeQuery(sql)) {
+        try (Connection conn = ConexionDB.getConnection(); Statement stmt = conn.createStatement(); ResultSet rs = stmt.executeQuery(sql)) {
 
             while (rs.next()) {
                 Pelicula p = new Pelicula(
@@ -50,11 +55,10 @@ public class PeliculaDAO {
         }
         return lista;
     }
-    
+
     public Pelicula buscarPeliculaPorId(int id) throws SQLException {
         String sql = "SELECT * FROM Cartelera WHERE id = ?";
-        try (Connection conn = ConexionDB.getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql)) {
+        try (Connection conn = ConexionDB.getConnection(); PreparedStatement ps = conn.prepareStatement(sql)) {
 
             ps.setInt(1, id);
             try (ResultSet rs = ps.executeQuery()) {
@@ -68,7 +72,7 @@ public class PeliculaDAO {
                             rs.getString("genero")
                     );
                 } else {
-                    return null; // No existe
+                    return null;
                 }
             }
         }
@@ -76,10 +80,9 @@ public class PeliculaDAO {
 
     public boolean actualizarPelicula(Pelicula p) throws SQLException {
         String sql = "UPDATE Cartelera SET titulo = ?, director = ?, anio = ?, duracion = ?, genero = ? WHERE id = ?";
-        try (Connection conn = ConexionDB.getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql)) {
+        try (Connection conn = ConexionDB.getConnection(); PreparedStatement ps = conn.prepareStatement(sql)) {
 
-            conn.setAutoCommit(false); 
+            conn.setAutoCommit(false);
 
             ps.setString(1, p.getTitulo());
             ps.setString(2, p.getDirector());
@@ -98,8 +101,7 @@ public class PeliculaDAO {
 
     public boolean eliminarPelicula(int id) throws SQLException {
         String sql = "DELETE FROM Cartelera WHERE id = ?";
-        try (Connection conn = ConexionDB.getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql)) {
+        try (Connection conn = ConexionDB.getConnection(); PreparedStatement ps = conn.prepareStatement(sql)) {
 
             conn.setAutoCommit(false);
             ps.setInt(1, id);
@@ -111,4 +113,64 @@ public class PeliculaDAO {
             throw e;
         }
     }
+
+    public List<Pelicula> buscarPorGeneroYAnio(String genero, int desde, int hasta) throws SQLException {
+        List<Pelicula> lista = new ArrayList<>();
+        String sql;
+
+        if (genero.equalsIgnoreCase("Todos")) {
+            sql = "SELECT * FROM Cartelera WHERE anio BETWEEN ? AND ?";
+        } else {
+            sql = "SELECT * FROM Cartelera WHERE anio BETWEEN ? AND ? AND genero = ?";
+        }
+
+        try (Connection conn = ConexionDB.getConnection(); PreparedStatement ps = conn.prepareStatement(sql)) {
+
+            ps.setInt(1, desde);
+            ps.setInt(2, hasta);
+
+            if (!genero.equalsIgnoreCase("Todos")) {
+                ps.setString(3, genero);
+            }
+
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    Pelicula p = new Pelicula(
+                            rs.getInt("id"),
+                            rs.getString("titulo"),
+                            rs.getString("director"),
+                            rs.getInt("anio"),
+                            rs.getInt("duracion"),
+                            rs.getString("genero")
+                    );
+                    lista.add(p);
+                }
+            }
+        }
+        return lista;
+    }
+
+
+    public List<Pelicula> buscarPorTitulo(String titulo) throws SQLException {
+        List<Pelicula> lista = new ArrayList<>();
+        String sql = "SELECT * FROM Cartelera WHERE titulo LIKE ?";
+        try (Connection conn = ConexionDB.getConnection(); PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setString(1, "%" + titulo + "%"); // búsqueda parcial
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    Pelicula p = new Pelicula(
+                            rs.getInt("id"),
+                            rs.getString("titulo"),
+                            rs.getString("director"),
+                            rs.getInt("anio"),
+                            rs.getInt("duracion"),
+                            rs.getString("genero")
+                    );
+                    lista.add(p);
+                }
+            }
+        }
+        return lista;
+    }
+
 }
